@@ -235,6 +235,73 @@ int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datat
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
+                /* Podemos o bien modificar esta seleccion a este nivel o modificar el auto*/
+        /* Primero realizaremos las pruebas a este nivel y una vez sacados los numeros, 
+           modificaremos la version auto*/
+        switch (MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM) {
+            case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_recursive_doubling:
+                mpi_errno = MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count,
+                                                                    datatype, op, comm_ptr,
+                                                                    errflag);
+                break;
+            case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_reduce_scatter_allgather:
+                mpi_errno = MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count,
+                                                                          datatype, op, comm_ptr,
+                                                                          errflag);
+                break;
+            case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_nb:
+                mpi_errno = MPIR_Allreduce_allcomm_nb(sendbuf, recvbuf, count,
+                                                      datatype, op, comm_ptr, errflag);
+                break;
+            case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_mst:
+                mpi_errno = MPIR_Reduce_intra_binomial(sendbuf,recvbuf,count,datatype,op,0,comm_ptr,errflag);
+                mpi_errno = MPIR_Bcast_intra_binomial(recvbuf,count,datatype,0,comm_ptr,errflag);
+
+                break;
+            case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_auto:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Allreduce_intra_auto(sendbuf, recvbuf, count, datatype, op,
+                                                      comm_ptr, errflag);
+                break;
+        }
+    } else {
+        /* intercommunicator */
+        switch (MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM) {
+            case MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM_reduce_exchange_bcast:
+                mpi_errno =
+                    MPIR_Allreduce_inter_reduce_exchange_bcast(sendbuf, recvbuf, count, datatype,
+                                                               op, comm_ptr, errflag);
+                break;
+            case MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM_nb:
+                mpi_errno = MPIR_Allreduce_allcomm_nb(sendbuf, recvbuf, count,
+                                                      datatype, op, comm_ptr, errflag);
+                break;
+            case MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM_auto:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Allreduce_inter_auto(sendbuf, recvbuf, count, datatype, op,
+                                                      comm_ptr, errflag);
+                break;
+        }
+    }
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+
+    goto fn_exit;
+}
+
+int MPIR_Allreduce_impl_ori(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                        MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
         switch (MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM) {
             case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_recursive_doubling:
                 mpi_errno = MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count,

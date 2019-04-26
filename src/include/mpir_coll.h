@@ -130,6 +130,8 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
                    MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
 int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                         MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
+int MPIR_Allreduce_impl_ori(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                        MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
 
 /* intracomm-only functions */
 int MPIR_Allreduce_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
