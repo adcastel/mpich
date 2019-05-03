@@ -63,6 +63,7 @@ cvars:
         Variable to select allreduce algorithm
         auto                     - Internal algorithm selection
         nb                       - Force nonblocking algorithm
+        mst                      - Force mst algorithm
         recursive_doubling       - Force recursive doubling algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
 
@@ -253,11 +254,11 @@ int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datat
                 mpi_errno = MPIR_Allreduce_allcomm_nb(sendbuf, recvbuf, count,
                                                       datatype, op, comm_ptr, errflag);
                 break;
-            case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_mst:
+            /*case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_mst:
                 mpi_errno = MPIR_Reduce_intra_binomial(sendbuf,recvbuf,count,datatype,op,0,comm_ptr,errflag);
                 mpi_errno = MPIR_Bcast_intra_binomial(recvbuf,count,datatype,0,comm_ptr,errflag);
 
-                break;
+                break;*/
             case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
@@ -477,11 +478,15 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
+if(MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM == MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_mst){
+                mpi_errno = MPIR_Reduce_intra_binomial(sendbuf,recvbuf,count,datatype,op,0,comm_ptr,&errflag);
+                mpi_errno = MPIR_Bcast_intra_binomial(recvbuf,count,datatype,0,comm_ptr,&errflag);
+}
+else{
     mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-
+}
     /* ... end of body of routine ... */
 
   fn_exit:
