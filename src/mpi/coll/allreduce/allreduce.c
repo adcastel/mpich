@@ -180,8 +180,9 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
     }
 
     pof2 = comm_ptr->pof2;
-    if ((nbytes <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
-        (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
+//    ADRIAN auto if ((nbytes <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
+//        (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
+      if(nbytes <= 4096){
         mpi_errno =
             MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
                                                     comm_ptr, errflag);
